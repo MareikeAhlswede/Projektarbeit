@@ -6,11 +6,8 @@ This module is used to perform the test of the Univariate Resemblance Analysis.
 
 # Imports
 import pandas as pd
-import numpy as np
 from scipy.stats import ttest_ind, mannwhitneyu, kstest, chi2_contingency, wasserstein_distance
 from scipy.spatial import distance
-from matplotlib import pyplot as plt
-import seaborn as sns
 
 
 
@@ -198,43 +195,6 @@ def cosinus_dist(real_data, synthetic_data):
     for col in num_cols:
         # Calculate the distance between real and synthetic data
         dists.append(distance.cosine(real_data[col].values, synthetic_data[col].values))
-
-    # Return the obtained distances
-    return dists
-
-
-
-def jensenshannon_dist(real_data, synthetic_data):
-    """
-    Calculates the Jenssen-Shannon distance to compare numerical attributes of
-    real and synthetic data.
-
-
-    Parameters
-    ----------
-    real_data : pandas.core.frame.DataFrame
-        The dataframe containing the scaled numerical attributes of the real data.
-    synthetic_data : pandas.core.frame.DataFrame
-        The dataframe containing the scaled numerical attributes of the synthetic data.
-
-
-    Returns
-    -------
-    list
-        A list of distances containing the results of the statistical tests.
-    """
-
-
-    # Get list of numerical column names
-    num_cols = real_data.columns.tolist()
-
-    # Initialize a list to save the distance measures
-    dists = []
-
-    # For each numerical column
-    for col in num_cols:
-        # Calculate the distance between real and synthetic data
-        dists.append(distance.jensenshannon(real_data[col].values, synthetic_data[col].values))
 
     # Return the obtained distances
     return dists

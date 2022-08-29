@@ -1,13 +1,12 @@
 """
 This module is the main script used to sample the data and evaluate the results
-between real data and synthetic data sample from different GAN architectures.
+between real data and synthetic data samples from different GAN architectures.
 """
 
 
 
 # Imports
 import warnings
-import os
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -21,13 +20,9 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from model_training import ModelTrainer
 from data_processing import DataProcessor
-from ura_eval import cosinus_dist, t_test, mwu_test, ks_test, chi2_test, cosinus_dist, \
-       jensenshannon_dist, wasserstein_dist
+from ura_eval import cosinus_dist, t_test, mwu_test, ks_test, chi2_test, wasserstein_dist
 from mra_eval import get_categorical_correlations
-from dra_eval import isomap_transform_on_batch , pca_transform, dra_distance
-
-from ydata_synthetic.synthesizers.regular import CRAMERGAN
-
+from dra_eval import pca_transform, dra_distance
 warnings.filterwarnings("ignore")
 
 
@@ -53,6 +48,7 @@ data_orig = pd.read_csv(r'.\data\diabetic_data.csv', sep=',',
                           'diabetesMed': 'category', 'readmitted': 'category'})
 
 
+
 # Print an overview of the data
 # print(data_orig.head())
 
@@ -65,7 +61,7 @@ data_orig = pd.read_csv(r'.\data\diabetic_data.csv', sep=',',
 
 
 # Split the data into test and training data (20% test data, 80% training data)
-data_train, data_test = train_test_split(data_orig, test_size=0.2, random_state=42)
+data_train, data_test = train_test_split(data_orig, test_size=0.2, shuffle = True, random_state=42)
 
 # Initialize a DataProcessor class used to transform the training data before GAN training
 # and for inverse transformation of the sampled data
@@ -75,123 +71,61 @@ processor = DataProcessor(data_train)
 # all values are scaled with mean zero and standard deviation one.
 prepro_data_train = processor.transform()
 
-# Define the batch sizes used for training the different GAN algorithms
-# batch_sizes = [1000]#, 100]  # 10000,
-
-# # # If it does not exist
-# # if not os.path.exists("./saved/gan"):
-# #     # Create a path to save the trained GAN Generators (Synthesizers)
-# #     os.makedirs("./saved/gan")
-
-# For each batch size
-# for bs in batch_sizes:
-
-#     # Initialize a ModelTrainer with the preprocessed training data and the selected batch_size
-#     trainer = ModelTrainer(prepro_data_train, batch_size=bs)
-
-#     # Create and train a GAN
-#     gan_synthesizer = trainer.gan_training()
-
-#     # Create a path to save the Generator of the GAN model.
-#     GAN_PATH = "./saved/gan/GAN_n5d30bs" + str(bs) + ".pkl"
-
-#     # Save the GAN model.
-#     gan_synthesizer.save(path=GAN_PATH)
-
-#     # Sample synthetic data from the GAN model
-#     gan_sample = gan_synthesizer.sample(110000).iloc[0:101766, :]
-
-#     # Inverse transform the synthetic data so that it has the original form of the real data
-#     gan_sample = processor.inverse_transform(gan_sample)
-
-#     # Create a path to save the synthetic data of the GAN model.
-#     GAN_PATH = "./saved/data/Sample_GAN_n5d30bs" + str(bs) + ".csv"
-
-#     # Save the synthetic data of the GAN model.
-#     gan_sample.to_csv(GAN_PATH)
-
-
-    # # Do the same for the WGAN
-    # wgan_synthesizer = trainer.wgan_training()
-    # WGAN_PATH = "./saved/gan/WGAN_n5d30bs" + str(bs) + ".pkl"
-    # wgan_synthesizer.save(path=WGAN_PATH)
-    # wgan_sample = wgan_synthesizer.sample(110000).iloc[0:101766, :]
-    # wgan_sample = processor.inverse_transform(wgan_sample)
-    # WGAN_PATH = "./saved/data/Sample_WGAN_n5d30bs" + str(bs) + ".csv"
-    # wgan_sample.to_csv(WGAN_PATH)
-
-
-#     # Do the same for the WGAN-GP
-#     wgangp_synthesizer = trainer.wgangp_training()
-#     WGANGP_PATH = "./saved/gan/WGANGP_n5d30bs" + str(bs) + ".pkl"
-#     wgangp_synthesizer.save(path=WGANGP_PATH)
-#     wgangp_sample = wgangp_synthesizer.sample(110000).iloc[0:101766, :]
-#     wgangp_sample = processor.inverse_transform(wgangp_sample)
-#     WGANGP_PATH = "./saved/data/Sample_WGANGP_n5d30bs" + str(bs) + ".csv"
-#     wgangp_sample.to_csv(WGANGP_PATH)
-
-
-#     # Do the same for the CramerGAN
-#     cramergan_synthesizer = trainer.cramergan_training()
-#     CRAMERGAN_PATH = "./saved/gan/CramerGAN_n5d30bs" + str(bs) + ".pkl"
-#     cramergan_synthesizer.save(path=CRAMERGAN_PATH)
-
-    # # Select the CramerGAN model
-    # model = CRAMERGAN
-    # cramergan_synthesizer = model.load(path='./saved/gan/CramerGAN_n5d30bs1000.pkl')
+prepro_data_train.to_csv(r'./saved/data/pre_pro_diabetic_data.csv')
 
 
 
+# Initialize a ModelTrainer with the preprocessed training data
+trainer = ModelTrainer(prepro_data_train)
 
-    # cramergan_sample = cramergan_synthesizer.sample(110000).iloc[0:101766, :]
-    # print(cramergan_sample)
-    # # Print out the number of missing values per column in %
-    # missing_data = cramergan_sample.isnull().mean()*100
-    # #missing_data = missing_data[missing_data!=0]
-    # print(missing_data)
-    # cramergan_sample = processor.inverse_transform(cramergan_sample)
-    # CRAMERGAN_PATH = "./saved/data/Sample_CramerGAN_n5d30bs" + \
-    #     str(bs) + ".csv"
-    # cramergan_sample.to_csv(CRAMERGAN_PATH)
+# Create and train a GAN
+gan_synthesizer = trainer.gan_training()
+
+# Create a path to save the Generator of the GAN model.
+GAN_PATH = "./saved/gan/GAN.pkl"
+
+# Save the GAN model.
+gan_synthesizer.save(path=GAN_PATH)
+
+# Sample synthetic data from the GAN model
+gan_sample = gan_synthesizer.sample(110000).iloc[0:101766, :]
+
+# Inverse transform the synthetic data so that it has the original form of the real data
+gan_sample = processor.inverse_transform(gan_sample)
+
+# Create a path to save the synthetic data of the GAN model.
+GAN_PATH = "./saved/data/Sample_GAN.csv"
+
+# Save the synthetic data of the GAN model.
+gan_sample.to_csv(GAN_PATH)
+
+
+# Do the same for the WGAN
+wgan_synthesizer = trainer.wgan_training()
+WGAN_PATH = "./saved/gan/WGAN.pkl"
+wgan_synthesizer.save(path=WGAN_PATH)
+wgan_sample = wgan_synthesizer.sample(110000).iloc[0:101766, :]
+wgan_sample = processor.inverse_transform(wgan_sample)
+WGAN_PATH = "./saved/data/Sample_WGAN.csv"
+wgan_sample.to_csv(WGAN_PATH)
+
+
+# Do the same for the WGAN-GP
+wgangp_synthesizer = trainer.wgangp_training()
+WGANGP_PATH = "./saved/gan/WGANGP.pkl"
+wgangp_synthesizer.save(path=WGANGP_PATH)
+wgangp_sample = wgangp_synthesizer.sample(110000).iloc[0:101766, :]
+wgangp_sample = processor.inverse_transform(wgangp_sample)
+WGANGP_PATH = "./saved/data/Sample_WGANGP.csv"
+wgangp_sample.to_csv(WGANGP_PATH)
+
+
 
 # Define all GAN models
 synthesizers = ['GAN', 'WGAN', 'WGANGP']
 
-gan = pd.read_csv(r'.\saved\data\Sample_GAN_200bs1000.csv',
-                        index_col=0, dtype={'encounter_id': np.int64, 'patient_nbr': np.int64,
-                        'gender': 'category', 'age': 'category', 'admission_type_id': 'category',
-                        'discharge_disposition_id': 'category','admission_source_id': 'category',
-                        'time_in_hospital': np.int64, 'num_lab_procedures': np.int64,
-                        'num_procedures': np.int64, 'num_medications': np.int64,
-                        'number_outpatient': np.int64, 'number_emergency': np.int64,
-                        'number_inpatient': np.int64, 'number_diagnoses': np.int64,
-                        'max_glu_serum': 'category', 'A1Cresult': 'category', 'change': 'category',
-                        'diabetesMed': 'category', 'readmitted': 'category'})#.iloc[0:81412, :]
-
-wgan = pd.read_csv(r'.\saved\data\Sample_WGAN_200bs1000.csv',
-                        index_col=0, dtype={'encounter_id': np.int64, 'patient_nbr': np.int64,
-                        'gender': 'category', 'age': 'category', 'admission_type_id': 'category',
-                        'discharge_disposition_id': 'category','admission_source_id': 'category',
-                        'time_in_hospital': np.int64,'num_lab_procedures': np.int64,
-                        'num_procedures': np.int64,'num_medications': np.int64,
-                        'number_outpatient': np.int64,'number_emergency': np.int64,
-                        'number_inpatient': np.int64,'number_diagnoses': np.int64,
-                        'max_glu_serum': 'category','A1Cresult': 'category', 'change': 'category',
-                        'diabetesMed': 'category', 'readmitted': 'category'})#.iloc[0:81412, :]
-
-wgangp = pd.read_csv(r'.\saved\data\Sample_WGANGP_200bs1000.csv',
-                        index_col=0, dtype={'encounter_id': np.int64, 'patient_nbr': np.int64,
-                        'gender': 'category', 'age': 'category', 'admission_type_id': 'category',
-                        'discharge_disposition_id': 'category', 'admission_source_id': 'category',
-                        'time_in_hospital': np.int64, 'num_lab_procedures': np.int64,
-                        'num_procedures': np.int64, 'num_medications': np.int64,
-                        'number_outpatient': np.int64, 'number_emergency': np.int64,
-                        'number_inpatient': np.int64, 'number_diagnoses': np.int64,
-                        'max_glu_serum': 'category', 'A1Cresult': 'category', 'change': 'category',
-                        'diabetesMed': 'category', 'readmitted': 'category'})#.iloc[0:81412, :]
-
 # Create a dictionary containing all datasets to be used for the evaluation
-data = {'Real': data_orig, 'GAN': gan, 'WGAN': wgan,'WGANGP': wgangp}
+data = {'Real': data_orig, 'GAN': gan_sample, 'WGAN': wgan_sample,'WGANGP': wgangp_sample}
 
 # Select all numerical columns
 num_cols = (data['Real'].select_dtypes(include=['int64'])).columns
@@ -208,9 +142,6 @@ for name in list(data.keys()):
     scaled_num_data[name] = processor.scale_num(data[name])
 
 
-
-#--------------------------------------------------------------------------------------------------
-# Univariate Resemblance analysis (URA)
 
 print("URA")
 
@@ -301,24 +232,6 @@ df_cos_dist.to_csv(r'.\saved\evaluation\resemblance\URA\05_URA_cosdist.csv')
 
 
 
-# Create a dictionary holding the Jensen-Shannon distance measures between real and synthetic data
-js_dist = dict()
-
-# For each sample of synthetic data
-for name in synthesizers:
-    # Calculate the Jensen-Shannon distance beteen real and synthetic data
-    js_dist[name] = jensenshannon_dist(
-        scaled_num_data['Real'], scaled_num_data[name])
-
-# Enter the results in a dictionary
-df_js_dist = pd.DataFrame(data=js_dist,
-                            index=(data['Real'].select_dtypes(include=['int64'])).columns)
-
-# Save the Jensen-Shannon distances as a .csv file
-df_js_dist.to_csv(r'.\saved\evaluation\resemblance\URA\06_URA_jsdist.csv')
-
-
-
 # Create a dictionary holding the Wasserstein distance measures between real and synthetic data
 ws_dist = dict()
 
@@ -333,7 +246,7 @@ df_ws_dist = pd.DataFrame(data=ws_dist,
                             index=(data['Real'].select_dtypes(include=['int64'])).columns)
 
 # Save the Wasserstein distances as a .csv file
-df_ws_dist.to_csv(r'.\saved\evaluation\resemblance\URA\07_URA_wsdist.csv')
+df_ws_dist.to_csv(r'.\saved\evaluation\resemblance\URA\06_URA_wsdist.csv')
 
 
 
@@ -427,12 +340,9 @@ fig.subplots_adjust(top=0.75)
 
 
 # Save the figure
-fig.savefig(r'.\saved\evaluation\resemblance\URA\08_URA_distplot.png', bbox_inches='tight')
+fig.savefig(r'.\saved\evaluation\resemblance\URA\07_URA_distplot.png', bbox_inches='tight')
 
 
-
-# #--------------------------------------------------------------------------------------------------
-# # MRA
 
 print("MRA")
 # Create dictionary to save computed Pearson correlation coefficient (PCC) matrixes of all datasets
@@ -601,16 +511,30 @@ fig.savefig(r'.\saved\evaluation\resemblance\MRA\02_MRA_catcorr.png', bbox_inche
 
 print("DRA")
 
+# Initialize a dictionary to save the scaled datasets
 scaled_all_data = dict()
 
+# For each dataset
 for key, value in data.items():
+    # Scall the dataset
     scaled_all_data[key] = processor.scale_all(value)
 
+
+
+# Initialize a dictionary to save the PCA results in
 data_pca = dict()
+
+# For each dataset
 for key, _ in data.items():
+    # Calculate the PCA transform
     data_pca[key] = pca_transform(scaled_all_data[key])
 
+
+
+# Create a dataframe holding the joint distances
 joint_dist_pca = pd.DataFrame(columns=['joint_dist'], index=synthesizers)
+
+
 
 # Get the standard color map
 cmap = plt.get_cmap("tab10")
@@ -620,9 +544,11 @@ fig, axes = plt.subplots(1, len(synthesizers), figsize=(12, 2))
 
 # For each synthetically created patient dataset
 for counter, key in enumerate(synthesizers):
+
     # Scatter the pca results of the real dataset
     axes[counter].scatter(data_pca['Real'].loc[:, 'PC1'], data_pca['Real'].loc[:, 'PC2'],
                             c=np.array([cmap(0)]), s=20, alpha=0.5)
+
     # Ontop, scatter the pca results of the synthetic dataset
     axes[counter].scatter(data_pca[key].loc[:, 'PC1'], data_pca[key].loc[:, 'PC2'],
                             c=np.array([cmap(counter+1)]), s=20, alpha=0.5)
@@ -636,64 +562,18 @@ for counter, key in enumerate(synthesizers):
     axes[counter].set_xticks([])
     axes[counter].set_yticks([])
 
+    # Calculate the joint distance and add it to the predefinde dataframe
     joint_dist_pca.iloc[counter, 0] = dra_distance(data_pca['Real'], data_pca[key])
 
 
 
-# # Save the figure containing the pca results
+# Save the figure containing the pca results
 fig.savefig(r'.\saved\evaluation\resemblance\DRA\01_DRA_PCA.png',
             bbox_inches='tight')
 
 # Save the joint distances as a .csv file
 joint_dist_pca.to_csv(r'.\saved\evaluation\resemblance\DRA\02_DRA_PCA_jointdist.csv')
 
-
-
-
-
-
-# data_iso = dict()
-# for name in data.keys():
-#     data_iso[name] = isomap_transform_on_batch(scaled_all_data[name])
-
-# print(data_iso['Real'])
-
-# joint_dist_iso = pd.DataFrame(columns=['joint_dist'], index=synthesizers)
-
-# # Get the standard color map
-# cmap = plt.get_cmap("tab10")
-
-# # Create a new figure
-# fig, axes = plt.subplots(1, len(synthesizers), figsize=(12, 2))
-
-# # For each synthetically created patient dataset
-# for counter, key in enumerate(synthesizers):
-#     # Scatter the iso results of the real dataset
-#     axes[counter].scatter(data_iso['Real'].loc[:, 'PC1'],
-#                           data_iso['Real'].loc[:, 'PC2'], c=np.array([cmap(0)]), s=20, alpha=0.5)
-#     # Ontop, scatter the iso results of the synthetic dataset
-#     axes[counter].scatter(data_iso[key].loc[:, 'PC1'],
-#                           data_iso[key].loc[:, 'PC2'], c=np.array([cmap(counter+1)]), s=20, alpha=0.5)
-
-#     # Label the x and y axis
-#     axes[counter].set_xlabel('PC1')
-#     axes[counter].set_ylabel('PC2')
-
-#     # Set the name of the GAN used for synthetic data generation as the title
-#     axes[counter].set_title(key)
-#     axes[counter].set_xticks([])
-#     axes[counter].set_yticks([])
-
-#     joint_dist_iso.iloc[counter, 0] = dra_distance(data_iso['Real'], data_iso[key])
-
-
-# # Save the figure containing the iso results
-# fig.savefig(r'.\saved\evaluation\resemblance\DRA\03_DRA_ISO.png',
-#             bbox_inches='tight')
-
-# # Save the joint distances as a .csv file
-# joint_dist_iso.to_csv(
-#     r'.\saved\evaluation\resemblance\DRA\04_DRA_ISO_jointdist.csv')
 
 
 #------------------------------------------------   ----------------------------------------------
@@ -722,7 +602,6 @@ for counter, key in enumerate(synthesizers):
 
     # For re-identification during classification, add a new target variable to the current
     # synthetic dataset
-
     scaled_synth = scaled_all_data[key]
     scaled_synth = pd.DataFrame(scaled_synth)
     scaled_synth['identification'] = 1.0

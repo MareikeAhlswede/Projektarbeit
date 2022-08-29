@@ -1,7 +1,6 @@
 """
 This module creates a DataProcessor class used to transform the training data before GAN training
-and for inverse transformation of the sampled data. Also, this module can be used to scale data
-between zero and one.
+and for inverse transformation of the sampled data. Also, this module can be used to scale data.
 """
 
 
@@ -9,13 +8,14 @@ between zero and one.
 # Imports
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler, MinMaxScaler, LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler, MinMaxScaler, \
+                                    LabelEncoder, OneHotEncoder
 
 
 
 class DataProcessor:
     """
-    A class used for pre- and post- processing of the real and synthetic data.
+    A class used for processing of the real and synthetic data.
 
 
     Attributes:
@@ -30,7 +30,10 @@ class DataProcessor:
         An ordinal encoder used to transform the categorical columns.
     std_scaler: dict
         A scaler used to transform the columns to have mean zero and a standard deviation of one.
-
+    label_encoder
+        A label encoder used to transform the categorical columns.
+    onehot_encoder
+        An one-hot encoder used to transform the categorical columns.
 
     Methods:
     --------
@@ -39,8 +42,11 @@ class DataProcessor:
     inverse_transform()
         Used the enocder and scaler to inverse transform the generated symples to
         obtain the synthetic data.
-    scale()
-        Used to scale data between zero and one.
+    scale_num()
+        Used to scale numeric data between zero and one.
+    scale_all()
+        Used to scale numeric data with mean zero and standard deviation of one
+        and one-hot encode categorical data.
     """
 
 
@@ -89,14 +95,20 @@ class DataProcessor:
         # Define a scaler scaling the data with mean zero and standard deviation of one
         self.std_scaler = StandardScaler()
 
+        # Define a label encoder
         self.label_encoder = dict()
 
+        # Initialize a dictionary to save the label encoders in
         categorical_vars = pd.DataFrame()
 
+        # For each categorical variable
         for cat in self.cat_cols:
+            # Fit an save a label encoder to the categorical data
             self.label_encoder[cat] = LabelEncoder().fit(raw_data[cat])
+            # And encode the categorical data
             categorical_vars[cat] = self.label_encoder[cat].transform(raw_data[cat])
 
+        # Use the label encoded data to fit the one-hot encoder
         self.onehot_encoder = OneHotEncoder().fit(categorical_vars)
 
 
@@ -113,33 +125,25 @@ class DataProcessor:
         # Take a copy of the training data and use it for further transformation
         prepro_data = self.train_data.copy()
 
-        # # Encode all categorical columns so that they contain ordinal values
-        # prepro_data = pd.concat([prepro_data.drop(labels = self.cat_cols, axis = 1),
-        #     pd.DataFrame(self.ordinal_encoder.fit_transform(prepro_data[self.cat_cols]), columns =
-        #     self.cat_cols)], axis=1, join='inner')
-
-        # prepro_data[self.cat_cols] = prepro_data[self.cat_cols].astype('category')
-
-        # # Scale all values to have mean zero and a standard deviation of one
-        # prepro_data = pd.DataFrame(self.std_scaler.fit_transform(prepro_data.values),
-        #     columns = prepro_data.columns.to_list())
-
-        # Encode all categorical columns so that they contain ordinal values
+        # Apply ordinal encoding to the categorical attributes
         cat_data = pd.DataFrame(self.ordinal_encoder.fit_transform(prepro_data[self.cat_cols]),
                                     columns = self.cat_cols)
 
+        # Apply scaling to the numerical attributres
         num_data = pd.DataFrame(self.std_scaler.fit_transform(prepro_data[self.int_cols]),
                                     columns = self.int_cols)
 
+        # Concatinate the data of the categorical and numeric attributes
         prepro_data = pd.concat([num_data, cat_data] , axis=1, join='inner')
 
+        # Set the correct datatypes of the preprocessed data
         prepro_data[self.cat_cols] = prepro_data[self.cat_cols].astype('category')
-
         prepro_data[self.int_cols] = prepro_data[self.int_cols].astype('float64')
 
+        # Reindex the preprocessed data so that it has the original form of the training data
         prepro_data = prepro_data.reindex(self.train_data.columns.tolist(), axis=1)
 
-        # Return the transformed training data.
+        # Return the preprocessed training data.
         return prepro_data
 
 
@@ -159,6 +163,8 @@ class DataProcessor:
         pandas.core.frame.DataFrame
             A dataframe with the inverse transformed synthetic data.
         """
+
+        # Take a copy of the sample data
         synthetic_data = sample_data.copy()
 
         # Inverse transform the ordinal encoding of categorical columns
@@ -166,44 +172,27 @@ class DataProcessor:
                                     columns=self.cat_cols)
 
         # Rescale all values to their original mean and standard deviations
-        #synthetic_data = pd.DataFrame(self.std_scaler.inverse_transform(sample_data.values),
-        #    columns = sample_data.columns.to_list())
-
         num_data = pd.DataFrame(self.std_scaler.inverse_transform(synthetic_data[self.int_cols]),
                                 columns=self.int_cols)
 
+        # Concatinate the categorical and numeric attributes
         synth_data = pd.concat([num_data, cat_data], axis=1, join='inner')
 
-        synth_data[self.cat_cols] = synth_data[self.cat_cols].astype(
-            'category')
+        # Set the correct datatypes of the preprocessed data
+        synth_data[self.cat_cols] = synth_data[self.cat_cols].astype('category')
+        synth_data[self.int_cols] = synth_data[self.int_cols].astype('int64')
 
-        synth_data[self.int_cols] = synth_data[self.int_cols].astype(
-            'int64')
-
+        # Reindex the preprocessed data so that it has the original form of the training data
         synth_data = synth_data.reindex(self.train_data.columns.tolist(), axis=1)
 
-        # Return the transformed training data.
+        # Return the transformed synthetic data.
         return synth_data
-
-
-        # # Transform the newly added categorical column to type category
-        # synthetic_data[self.cat_cols] = synthetic_data[self.cat_cols].astype('category')
-
-        # # Transform all numerical values back to integers
-        # synthetic_data[self.int_cols] = synthetic_data[self.int_cols].astype(
-        #     'int64')
-
-        # # Resort the columns so that the columns have the same order as the original training data
-        # synthetic_data = synthetic_data.reindex(self.train_data.columns.tolist(), axis = 1)
-
-        # Return the inverse transformed sample of the synthetic data
-        return synthetic_data
 
 
 
     def scale_num(self, dataframe):
         """
-        Scale a dataframe so that all values lie between 0 and 1.
+        Scale a dataframe so that all numeric attributes lie between 0 and 1.
 
         Parameters
         ----------
@@ -225,32 +214,34 @@ class DataProcessor:
 
 
     def scale_all(self, dataframe):
-        """Preprocess the given dataset applying One-Hot encoding of categorical attributes and
-        Standardization for numerical attributes.
+        """
+        Used to scale numeric data with mean zero and standard deviation of one
+        and one-hot encode categorical data.
 
         Parameters
         ----------
         data : pandas.core.frame.DataFrame
-            The dataframe to be preprocessed
+            The data to be transformed.
+
         Returns
         -------
         numpy.ndarray
-            a matrix with the preprocessed data
+            The transformed data.
         """
 
-        #get categorical attributes
+        # Initialize a dataframe to save the encoded categorical attributes
         categorical_vars = pd.DataFrame()
 
-        #label encoder each categorical attribute
+        # For each categorical attribute
         for cat in self.cat_cols:
+            # Transform the categorical data using a label encoder
             categorical_vars[cat] = self.label_encoder[cat].transform(dataframe[cat])
 
+        # Apply one-hot encoding to the categorical data and transfer it to an array
         x_cat = self.onehot_encoder.transform(categorical_vars).toarray()
 
-        #standardize numerical variables
-        numerical_vars = dataframe.select_dtypes(include=['int64'])
-        x_num = StandardScaler().fit_transform(numerical_vars)
+        # Scale all numerical attributes to have mean zero and a standard deviation of one
+        x_num = self.std_scaler().transform(dataframe[self.int_cols])
 
-        #return the standardized numerical attributes stacked with the one-hot
-        # encoded categorical attributes
+        # Return the transformed data as an ndarray
         return np.column_stack((x_num, x_cat)).astype('float32')

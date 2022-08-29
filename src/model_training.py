@@ -6,7 +6,7 @@ This module is used for GAN creation and training.
 
 # Imports
 from ydata_synthetic.synthesizers import ModelParameters, TrainParameters
-from ydata_synthetic.synthesizers.regular import VanilllaGAN, WGAN, WGAN_GP, CRAMERGAN
+from ydata_synthetic.synthesizers.regular import VanilllaGAN, WGAN, WGAN_GP
 
 
 
@@ -51,13 +51,11 @@ class ModelTrainer:
         Create and train a WGAN algorithm.
     wgangp_training()
         Create and train a WGAN-GP algorithm.
-    cramergan_training()
-        Create and train a CramerGAN algorithm.
     """
 
 
 
-    def __init__(self, real_data, batch_size):
+    def __init__(self, real_data):
         """
         Initialization of the class.
 
@@ -68,18 +66,16 @@ class ModelTrainer:
             The real data used to train the GANs.
         """
 
-
-
         # Setting the initial parameters
         self.real_data = real_data
         self.num_cols = real_data.select_dtypes(include=['float64']).columns.tolist()
         self.cat_cols = real_data.select_dtypes(include=['category']).columns.tolist()
-        self.noise_dim = 5#32
-        self.dim = 30#128
+        self.noise_dim = 32
+        self.dim = 128
         self.data_dim = real_data.shape[1]
-        self.batch_size = batch_size # 128 or 16 in paper --> Up to change
+        self.batch_size = 1000
         self.log_step = 100
-        self.epochs = 200 # Up to change
+        self.epochs = 200
         self.learning_rate = 5e-4
         self.beta_1 = 0.5
         self.beta_2 = 0.9
@@ -171,7 +167,7 @@ class ModelTrainer:
         Returns
         -------
         pandas.core.frame.DataFrame
-            -Returns the generator of the WGAN-GP algorithm.
+            Returns the generator of the WGAN-GP algorithm.
         """
 
         # Define the parameters used to set up the WGAN-GP model
@@ -197,42 +193,4 @@ class ModelTrainer:
                             (self.real_data.select_dtypes(include=['category'])).columns.tolist())
 
         # Return the Generator of the WGAN-GP model
-        return synthesizer
-
-
-
-    def cramergan_training(self):
-        """
-        Train a CramerGAN.
-
-
-        Returns
-        -------
-        pandas.core.frame.DataFrame
-            Returns the generator of the CramerGAN algorithm.
-        """
-
-        # Define the parameters used to set up the CramerGAN model
-        gan_args = ModelParameters(batch_size=self.batch_size,
-                                   lr=self.learning_rate,
-                                   betas=(self.beta_1, self.beta_2),
-                                   noise_dim=self.noise_dim,
-                                   layers_dim=self.dim)
-
-        # Define the parameters used for CramerGAN training
-        train_args = TrainParameters(epochs=self.epochs,
-                                     sample_interval=self.log_step)
-
-        # Select the CramerGAN model
-        model = CRAMERGAN
-
-        # Initialize the CramerGAN model with the pre-defined parameters
-        synthesizer = model(gan_args)
-
-        # Train the CramerGAN model
-        synthesizer.train(self.real_data, train_args,
-                          (self.real_data.select_dtypes(include=['float64'])).columns.tolist(),
-                          (self.real_data.select_dtypes(include=['category'])).columns.tolist())
-
-        # Return the Generator of the CramerGAN model
         return synthesizer
