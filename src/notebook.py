@@ -119,6 +119,59 @@ wgangp_sample = processor.inverse_transform(wgangp_sample)
 WGANGP_PATH = "./saved/data/Sample_WGANGP.csv"
 wgangp_sample.to_csv(WGANGP_PATH)
 
+gan_sample = pd.read_csv(r'.\saved\data\Sample_GAN.csv', sep=',',
+                        usecols=['encounter_id', 'patient_nbr', 'gender', 'age', 'admission_type_id',
+                                 'discharge_disposition_id', 'admission_source_id', 'time_in_hospital',
+                                 'num_lab_procedures', 'num_procedures', 'num_medications',
+                                 'number_outpatient', 'number_emergency', 'number_inpatient',
+                                 'number_diagnoses', 'max_glu_serum', 'A1Cresult', 'change',
+                                 'diabetesMed', 'readmitted'],
+                        dtype={'encounter_id': np.int64, 'patient_nbr': np.int64, 'gender': 'category',
+                               'age': 'category', 'admission_type_id': 'category',
+                               'discharge_disposition_id': 'category',
+                               'admission_source_id': 'category', 'time_in_hospital': np.int64,
+                               'num_lab_procedures': np.int64, 'num_procedures': np.int64,
+                               'num_medications': np.int64, 'number_outpatient': np.int64,
+                               'number_emergency': np.int64, 'number_inpatient': np.int64,
+                               'number_diagnoses': np.int64, 'max_glu_serum': 'category',
+                               'A1Cresult': 'category', 'change': 'category',
+                               'diabetesMed': 'category', 'readmitted': 'category'})
+
+wgan_sample = pd.read_csv(r'.\saved\data\Sample_WGAN.csv', sep=',',
+                   usecols=['encounter_id', 'patient_nbr', 'gender', 'age', 'admission_type_id',
+                            'discharge_disposition_id', 'admission_source_id', 'time_in_hospital',
+                            'num_lab_procedures', 'num_procedures', 'num_medications',
+                            'number_outpatient', 'number_emergency', 'number_inpatient',
+                            'number_diagnoses', 'max_glu_serum', 'A1Cresult', 'change',
+                            'diabetesMed', 'readmitted'],
+                   dtype={'encounter_id': np.int64, 'patient_nbr': np.int64, 'gender': 'category',
+                          'age': 'category', 'admission_type_id': 'category',
+                          'discharge_disposition_id': 'category',
+                          'admission_source_id': 'category', 'time_in_hospital': np.int64,
+                          'num_lab_procedures': np.int64, 'num_procedures': np.int64,
+                          'num_medications': np.int64, 'number_outpatient': np.int64,
+                          'number_emergency': np.int64, 'number_inpatient': np.int64,
+                          'number_diagnoses': np.int64, 'max_glu_serum': 'category',
+                          'A1Cresult': 'category', 'change': 'category',
+                          'diabetesMed': 'category', 'readmitted': 'category'})
+
+wgangp_sample = pd.read_csv(r'.\saved\data\Sample_WGANGP.csv', sep=',',
+                        usecols=['encounter_id', 'patient_nbr', 'gender', 'age', 'admission_type_id',
+                                 'discharge_disposition_id', 'admission_source_id', 'time_in_hospital',
+                                 'num_lab_procedures', 'num_procedures', 'num_medications',
+                                 'number_outpatient', 'number_emergency', 'number_inpatient',
+                                 'number_diagnoses', 'max_glu_serum', 'A1Cresult', 'change',
+                                 'diabetesMed', 'readmitted'],
+                        dtype={'encounter_id': np.int64, 'patient_nbr': np.int64, 'gender': 'category',
+                               'age': 'category', 'admission_type_id': 'category',
+                               'discharge_disposition_id': 'category',
+                               'admission_source_id': 'category', 'time_in_hospital': np.int64,
+                               'num_lab_procedures': np.int64, 'num_procedures': np.int64,
+                               'num_medications': np.int64, 'number_outpatient': np.int64,
+                               'number_emergency': np.int64, 'number_inpatient': np.int64,
+                               'number_diagnoses': np.int64, 'max_glu_serum': 'category',
+                               'A1Cresult': 'category', 'change': 'category',
+                               'diabetesMed': 'category', 'readmitted': 'category'})
 
 
 # Define all GAN models

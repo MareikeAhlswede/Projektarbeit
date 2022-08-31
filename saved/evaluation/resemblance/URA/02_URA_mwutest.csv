@@ -1,0 +1,11 @@
+,GAN,WGAN,WGANGP
+encounter_id,0.0,0.0,0.0
+patient_nbr,0.0,0.0,0.0
+time_in_hospital,0.0,0.0,0.0
+num_lab_procedures,0.0,0.0,1.3939752880475782e-33
+num_procedures,0.0,0.0,0.0
+num_medications,0.0,0.0,0.0
+number_outpatient,0.0,0.0,0.0
+number_emergency,0.0,0.0,0.0
+number_inpatient,0.0,0.0,0.0
+number_diagnoses,0.0,0.0,0.0
