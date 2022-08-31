@@ -130,7 +130,8 @@ class DataProcessor:
                                     columns = self.cat_cols)
 
         # Apply scaling to the numerical attributres
-        num_data = pd.DataFrame(self.std_scaler.fit_transform(prepro_data[self.int_cols]),
+        self.std_scaler = self.std_scaler.fit(prepro_data[self.int_cols])
+        num_data = pd.DataFrame(self.std_scaler.transform(prepro_data[self.int_cols]),
                                     columns = self.int_cols)
 
         # Concatinate the data of the categorical and numeric attributes
@@ -241,7 +242,7 @@ class DataProcessor:
         x_cat = self.onehot_encoder.transform(categorical_vars).toarray()
 
         # Scale all numerical attributes to have mean zero and a standard deviation of one
-        x_num = self.std_scaler().transform(dataframe[self.int_cols])
+        x_num = self.std_scaler.transform(dataframe[self.int_cols])
 
         # Return the transformed data as an ndarray
         return np.column_stack((x_num, x_cat)).astype('float32')
